@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import argparse
+import os
+import re
+import tempfile
+
+default_header = '┌─ TODO ─────┐'
+default_bullet = '→ '
+default_path = os.getenv('HOME') + '/Dropbox/TODO'
+
+
+def init():
+    parser =  argparse.ArgumentParser(description='shortcuts for managing a TODO file.')
+    parser.add_argument('command', nargs='?', default='print')
+    parser.add_argument('-q', action='store_true',
+                        help='be quiet')
+    parser.add_argument('-f', metavar='file', nargs='?', default=default_path,
+                        help="file location (default='%s')" % default_path)
+    parser.add_argument('-H', metavar='header', nargs='?', default=default_header,
+                        help="list header (default='%s')" % default_header)
+    parser.add_argument('-B', metavar='bullet', nargs='?', default=default_bullet,
+                        help="bullet (default='%s')" % default_bullet)
+    opts = parser.parse_known_args()
+
+    # call the method with the corresponding name
+
+    cmd = getattr(__import__(__name__), 'cmd_' + opts[0].command)
+    result = cmd(opts[0], opts[1])
+
+
+def cmd_add(opts, line):
+    to_add = opts.B + ' '.join(line) + '\n'
+    with open(opts.f, 'a') as f:
+        f.write(to_add)
+        f.close()
+
+    if opts.q != True:
+        cmd_print(opts, line)
+
+
+def cmd_remove(opts, line):
+    to_search = ' '.join(line)
+    tmpfile = tempfile.TemporaryFile()
+
+    with open(opts.f, 'r') as inf:
+        matches = []
+
+        for inline in inf:
+            if inline.startswith(opts.H):
+                continue
+
+            m = re.search(to_search, inline)
+            if m:
+                matches.append(inline)
+            else:
+                tmpfile.write(inline)
+
+        if len(matches) > 1:
+            print 'too many matches:'
+            print ''.join(matches)
+            exit(1)
+
+        if len(matches) == 0:
+            print 'not found'
+            exit(1)
+
+    inf.close()  # not strictly necessary
+
+    with open(opts.f, 'w+b') as outf:
+        outf.truncate()
+        tmpfile.seek(0)
+        outf.write(opts.H + '\n')
+        for inline in tmpfile:
+            outf.write(inline)
+
+    if opts.q != True:
+        cmd_print(opts, line)
+
+
+def cmd_move(opts, line):
+    if opts.q != True:
+        cmd_print(opts, line)
+
+
+def cmd_print(opts, feh):
+    with open(opts.f) as f:
+        for line in f:
+            print line,
+
+
+if __name__ == '__main__':
+    init()
+
