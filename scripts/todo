@@ -6,7 +6,7 @@ import os
 import re
 import tempfile
 
-default_header = '┌─ TODO ─────┐'
+default_header = '┌─ TODO ─────  ───  ──  ─  -'
 default_bullet = '→ '
 default_path = os.getenv('HOME') + '/Dropbox/TODO'
 

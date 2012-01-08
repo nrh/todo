@@ -8,7 +8,6 @@ setup(name='todo',
       author='Nicholas Harteau',
       author_email='n@hep.cat',
       url='http://github.com/nrh/todo',
-      packages=['distutils','distutils.command'],
       scripts=['scripts/todo'],
      )
 
